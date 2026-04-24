@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스파르타 쇼핑몰</title>
+  <style>
+    /* ── 리셋 & 기본 ───────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      background: #f4f4f4;
+      color: #111;
+      min-height: 100vh;
+    }
+
+    /* ── 헤더 ─────────────────────────────────────────── */
+    .header {
+      position: sticky; top: 0; z-index: 200;
+      background: #fff;
+      border-bottom: 1px solid #e8e8e8;
+      height: 58px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .logo { font-size: 18px; font-weight: 800; color: #e8341c; letter-spacing: -.5px; }
+    .logo span { color: #111; }
+
+    .header-cart {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 14px; border-radius: 20px;
+      background: #f5f5f5; cursor: pointer;
+      font-size: 14px; font-weight: 600; color: #333;
+      transition: background .15s;
+      user-select: none;
+    }
+    .header-cart:hover { background: #eaeaea; }
+    .badge {
+      background: #e8341c; color: #fff;
+      font-size: 11px; font-weight: 700;
+      padding: 1px 6px; border-radius: 10px;
+      display: none;
+    }
+    .badge.on { display: inline-block; }
+
+    /* ── 메인 레이아웃 ────────────────────────────────── */
+    .layout {
+      max-width: 1080px; margin: 0 auto;
+      padding: 28px 24px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── 공통 패널 ────────────────────────────────────── */
+    .panel {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .panel-head {
+      padding: 16px 20px 13px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title { font-size: 13px; font-weight: 700; letter-spacing: .4px; color: #555; text-transform: uppercase; }
+    .panel-sub   { font-size: 12px; color: #bbb; }
+
+    /* ── 상품 그리드 ──────────────────────────────────── */
+    .product-grid {
+      padding: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .product-card {
+      border-radius: 10px; overflow: hidden;
+      border: 1.5px solid #f0f0f0;
+      transition: box-shadow .15s, transform .15s;
+      background: #fff;
+    }
+    .product-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.1); transform: translateY(-2px); }
+
+    .product-thumb {
+      height: 130px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px;
+    }
+    .product-info { padding: 12px 14px 14px; }
+    .product-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; line-height: 1.4; }
+    .product-price { font-size: 15px; font-weight: 800; color: #e8341c; margin-bottom: 11px; }
+
+    .btn-add {
+      width: 100%; padding: 9px;
+      background: #111; color: #fff;
+      border: none; border-radius: 7px;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: background .15s;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .btn-add:hover   { background: #333; }
+    .btn-add.added   { background: #e8341c; }
+    .btn-add.added:hover { background: #c72d18; }
+
+    /* ── 우측 사이드바 ────────────────────────────────── */
+    .sidebar {
+      position: sticky; top: 78px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* ── 장바구니 ─────────────────────────────────────── */
+    .cart-list { }
+    .cart-empty {
+      padding: 26px 20px; text-align: center;
+      font-size: 13px; color: #bbb;
+    }
+    .cart-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 20px; border-bottom: 1px solid #f5f5f5;
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .ci-icon { font-size: 22px; flex-shrink: 0; }
+    .ci-info { flex: 1; min-width: 0; }
+    .ci-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ci-qty  { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .ci-price { font-size: 13px; font-weight: 700; flex-shrink: 0; }
+
+    .cart-foot {
+      padding: 14px 20px 18px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .total-row {
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 2px solid #111; padding-top: 12px; margin-bottom: 14px;
+    }
+    .total-label  { font-size: 14px; font-weight: 700; }
+    .total-amount { font-size: 18px; font-weight: 800; color: #e8341c; }
+
+    .btn-pay {
+      width: 100%; padding: 14px;
+      background: #e8341c; color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 15px; font-weight: 800; letter-spacing: -.3px;
+      cursor: pointer; transition: background .15s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-pay:hover:not(:disabled) { background: #c72d18; }
+    .btn-pay:disabled { background: #ddd; color: #bbb; cursor: not-allowed; }
+
+    /* ── 주문 내역 ────────────────────────────────────── */
+    .order-item {
+      padding: 14px 20px;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .order-item:last-child { border-bottom: none; }
+    .order-row1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .order-id   { font-size: 13px; font-weight: 700; }
+    .order-name { font-size: 12px; color: #888; margin-bottom: 4px; }
+    .order-amount { font-size: 15px; font-weight: 800; }
+    .order-portone { font-size: 11px; color: #bbb; margin-top: 2px; word-break: break-all; }
+
+    .chip {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: 10px;
+      font-size: 11px; font-weight: 700;
+    }
+    .chip-paid      { background: #dcfce7; color: #15803d; }
+    .chip-cancelled { background: #fee2e2; color: #b91c1c; }
+
+    .cancel-area { margin-top: 10px; display: flex; gap: 6px; }
+    .cancel-reason {
+      flex: 1; min-width: 0;
+      border: 1px solid #e5e5e5; border-radius: 6px;
+      padding: 7px 10px; font-size: 12px;
+      outline: none; font-family: inherit;
+    }
+    .cancel-reason:focus { border-color: #e8341c; }
+    .btn-cancel {
+      padding: 7px 12px;
+      background: #fff; color: #e8341c;
+      border: 1.5px solid #e8341c; border-radius: 6px;
+      font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all .15s; white-space: nowrap;
+    }
+    .btn-cancel:hover:not(:disabled) { background: #e8341c; color: #fff; }
+    .btn-cancel:disabled { border-color: #ddd; color: #ccc; cursor: not-allowed; }
+
+    /* ── 토스트 ───────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      padding: 11px 20px; border-radius: 8px;
+      font-size: 14px; font-weight: 500; color: #fff;
+      background: #222; opacity: 0;
+      transition: opacity .25s, transform .25s;
+      pointer-events: none; z-index: 9999;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.ok  { background: #16a34a; }
+    .toast.err { background: #dc2626; }
+
+    /* ── 스피너 ───────────────────────────────────────── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .6s linear infinite;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ 헤더 ═══════════════ -->
+<header class="header">
+  <div class="logo">⚡<span>스파르타</span> 쇼핑몰</div>
+  <div class="header-cart" id="header-cart">
+    🛒 장바구니
+    <span class="badge" id="header-badge">0</span>
+  </div>
+</header>
+
+<!-- ═══════════════ 메인 ═══════════════ -->
+<div class="layout">
+
+  <!-- ── 좌측: 상품 목록 ── -->
+  <div>
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">상품 목록</span>
+        <span class="panel-sub" id="product-count"></span>
+      </div>
+      <div class="product-grid" id="product-grid">
+        <!-- JS로 렌더링 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 우측: 장바구니 + 주문 내역 ── -->
+  <div class="sidebar">
+
+    <!-- 장바구니 -->
+    <div class="panel" id="cart-panel">
+      <div class="panel-head">
+        <span class="panel-title">장바구니</span>
+        <span class="panel-sub" id="cart-count-label"></span>
+      </div>
+      <div id="cart-list">
+        <div class="cart-empty">담긴 상품이 없습니다</div>
+      </div>
+      <div class="cart-foot">
+        <div class="total-row">
+          <span class="total-label">합계</span>
+          <span class="total-amount" id="cart-total">0원</span>
+        </div>
+        <button class="btn-pay" id="btn-pay" disabled>결제하기</button>
+      </div>
+    </div>
+
+    <!-- 주문 내역 (결제 후 표시) -->
+    <div class="panel" id="order-panel" style="display:none;">
+      <div class="panel-head">
+        <span class="panel-title">주문 내역</span>
+      </div>
+      <div id="order-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ 토스트 ═══════════════ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════ 스크립트 ═══════════════ -->
+<script type="module">
+  import PortOne from 'https://cdn.portone.io/v2/browser-sdk.esm.js';
+
+  // ────────────────────────────────────────────────────────
+  //  상태
+  // ────────────────────────────────────────────────────────
+  let products    = [];   // GET /api/products 결과
+  let portoneConf = null; // GET /api/config/portone 결과
+  let cart        = [];   // [{ productId, name, price, quantity, cartItemId }]
+  let orders      = [];   // 완료된 주문 목록 (메모리)
+  let paySeq      = 0;    // H2 auto-increment Payment.id 추적용
+
+  // 상품 테마 (index 순서 고정)
+  const THEMES = [
+    { bg: 'linear-gradient(135deg,#0f0f1a,#1e1e3f)', emoji: '👟' },
+    { bg: 'linear-gradient(135deg,#003d20,#006b38)', emoji: '👟' },
+    { bg: 'linear-gradient(135deg,#0d2a52,#1a4d96)', emoji: '👟' },
+  ];
+
+  // ────────────────────────────────────────────────────────
+  //  초기화: 상품 목록 + PortOne 설정 병렬 로드
+  // ────────────────────────────────────────────────────────
+  async function init() {
+    const [prRes, cfRes] = await Promise.allSettled([
+      fetch('/api/products'),
+      fetch('/api/config/portone'),
+    ]);
+
+    if (prRes.status === 'fulfilled' && prRes.value.ok) {
+      products = await prRes.value.json();
+    } else {
+      toast('상품 목록을 불러오지 못했습니다.', 'err');
+    }
+
+    if (cfRes.status === 'fulfilled' && cfRes.value.ok) {
+      portoneConf = await cfRes.value.json();
+    } else {
+      toast('PortOne 설정을 불러오지 못했습니다.', 'err');
+    }
+
+    renderProducts();
+  }
+
+  // ────────────────────────────────────────────────────────
+  //  상품 렌더링
+  // ────────────────────────────────────────────────────────
+  function renderProducts() {
+    const grid = document.getElementById('product-grid');
+    document.getElementById('product-count').textContent =
+      products.length ? `${products.length}개` : '';
+
+    if (!products.length) {
+      grid.innerHTML = '<p style="padding:20px;color:#bbb;font-size:13px;">상품이 없습니다.</p>';
+      return;
+    }
+
+    grid.innerHTML = products.map((p, i) => {
+      const t      = THEMES[i % THEMES.length];
+      const inCart = cart.find(c => c.productId === p.id);
+      return `
+        <div class="product-card">
+          <div class="product-thumb" style="background:${t.bg};">${t.emoji}</div>
+          <div class="product-info">
+            <div class="product-name">${p.name}</div>
+            <div class="product-price">${p.price.toLocaleString()}원</div>
+            <button class="btn-add ${inCart ? 'added' : ''}" data-id="${p.id}">
+              ${inCart ? `✓ 담김 (${inCart.quantity})` : '+ 담기'}
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+
+    grid.onclick = e => {
+      const btn = e.target.closest('.btn-add');
+      if (btn) addToCart(Number(btn.dataset.id));
+    };
+  }
+
+  // ────────────────────────────────────────────────────────
+  //  장바구니 담기  POST /api/cart/items
+  // ────────────────────────────────────────────────────────
+  async function addToCart(productId) {
+    const res = await fetch('/api/cart/items', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ productId, quantity: 1 }),
+    });
+
+    if (!res.ok) {
+      toast(`담기 실패 (${res.status})`, 'err');
+      return;
+    }
+
+    const { cartItemId } = await res.json();
+    const product  = products.find(p => p.id === productId);
+    const existing = cart.find(c => c.productId === productId);
+
+    if (existing) {
+      existing.quantity++;
+      existing.cartItemId = cartItemId;
+    } else {
+      cart.push({ productId, name: product.name, price: product.price, quantity: 1, cartItemId });
+    }
+
+    renderProducts();
+    renderCart();
+    toast(`${product.name} 담았습니다 🛒`);
+  }
+
+  // ────────────────────────────────────────────────────────
+  //  장바구니 렌더링
+  // ────────────────────────────────────────────────────────
+  function renderCart() {
+    const listEl  = document.getElementById('cart-list');
+    const totalEl = document.getElementById('cart-total');
+    const cntEl   = document.getElementById('cart-count-label');
+    const payBtn  = document.getElementById('btn-pay');
+    const badge   = document.getElementById('header-badge');
+
+    const total     = cart.reduce((s, c) => s + c.price * c.quantity, 0);
+    const itemCount = cart.reduce((s, c) => s + c.quantity, 0);
+
+    badge.textContent = itemCount;
+    badge.classList.toggle('on', itemCount > 0);
+    cntEl.textContent  = itemCount > 0 ? `${itemCount}개` : '';
+    totalEl.textContent = total.toLocaleString() + '원';
+    payBtn.disabled    = cart.length === 0;
+
+    if (!cart.length) {
+      listEl.innerHTML = '<div class="cart-empty">담긴 상품이 없습니다</div>';
+      return;
+    }
+
+    listEl.innerHTML = cart.map((c, i) => `
+      <div class="cart-item">
+        <div class="ci-icon">${THEMES[i % THEMES.length].emoji}</div>
+        <div class="ci-info">
+          <div class="ci-name">${c.name}</div>
+          <div class="ci-qty">수량 ${c.quantity}개</div>
+        </div>
+        <div class="ci-price">${(c.price * c.quantity).toLocaleString()}원</div>
+      </div>`).join('');
+  }
+
+  // ────────────────────────────────────────────────────────
+  //  결제하기
+  //  POST /api/orders/checkout → PortOne 결제창 → POST /api/payments/confirm
+  // ────────────────────────────────────────────────────────
+  document.getElementById('btn-pay').addEventListener('click', async () => {
+    if (!cart.length) return;
+    if (!portoneConf) { toast('PortOne 설정 로딩 중입니다.', 'err'); return; }
+
+    const btn = document.getElementById('btn-pay');
+    btn.disabled  = true;
+    btn.innerHTML = '<span class="spin"></span> 처리 중...';
+
+    try {
+      // ① 주문 + 결제 레코드 생성
+      //    cartItemIds: [] → 서버에서 전체 장바구니 사용
+      const orderRes = await fetch('/api/orders/checkout', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ cartItemIds: [] }),
+      });
+
+      if (!orderRes.ok) {
+        toast(`주문 생성 실패 (${orderRes.status})`, 'err');
+        return;
+      }
+
+      // { orderId, portonePaymentId, totalAmount, orderName, status }
+      const order = await orderRes.json();
+
+      // ② PortOne 결제창 오픈
+      const payResult = await PortOne.requestPayment({
+        storeId:     portoneConf.storeId,
+        channelKey:  portoneConf.channelKey,
+        paymentId:   order.portonePaymentId,
+        orderName:   order.orderName,
+        totalAmount: order.totalAmount,
+        currency:    'KRW',
+        payMethod:   'CARD',
+      });
+
+      if (payResult.code) {
+        toast('결제가 취소되었습니다.', 'err');
+        return;
+      }
+
+      // ③ 결제 확정  POST /api/payments/confirm
+      const confirmRes = await fetch('/api/payments/confirm', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          orderId:          order.orderId,
+          portonePaymentId: order.portonePaymentId,
+        }),
+      });
+
+      if (!confirmRes.ok) {
+        toast(`결제 확정 실패 (${confirmRes.status})`, 'err');
+        return;
+      }
+
+      // 성공
+      paySeq++;
+      orders.unshift({                         // 최신순 삽입
+        orderId:          order.orderId,
+        portonePaymentId: order.portonePaymentId,
+        totalAmount:      order.totalAmount,
+        orderName:        order.orderName,
+        paymentDbId:      paySeq,              // H2 auto-increment Payment.id
+        status:           'PAID',
+      });
+
+      cart.length = 0;
+      renderProducts();
+      renderCart();
+      renderOrders();
+      toast('결제 완료! ✅', 'ok');
+
+    } finally {
+      btn.disabled  = false;
+      btn.innerHTML = '결제하기';
+    }
+  });
+
+  // ────────────────────────────────────────────────────────
+  //  결제 취소  POST /api/payments/{id}/cancel
+  // ────────────────────────────────────────────────────────
+  async function cancelPayment(paymentDbId, reason, btn) {
+    btn.disabled  = true;
+    btn.textContent = '취소 중...';
+
+    const res = await fetch(`/api/payments/${paymentDbId}/cancel`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ reason, storeId: null }),
+    });
+
+    if (!res.ok) {
+      toast(`취소 실패 (${res.status})`, 'err');
+      btn.disabled  = false;
+      btn.textContent = '결제취소';
+      return;
+    }
+
+    const order = orders.find(o => o.paymentDbId === paymentDbId);
+    if (order) order.status = 'CANCELLED';
+    renderOrders();
+    toast('결제가 취소되었습니다.', 'ok');
+  }
+
+  // ────────────────────────────────────────────────────────
+  //  주문 내역 렌더링
+  // ────────────────────────────────────────────────────────
+  function renderOrders() {
+    const panel = document.getElementById('order-panel');
+    const list  = document.getElementById('order-list');
+
+    if (!orders.length) { panel.style.display = 'none'; return; }
+    panel.style.display = 'block';
+
+    list.innerHTML = orders.map(o => {
+      const cancelled = o.status === 'CANCELLED';
+      return `
+        <div class="order-item">
+          <div class="order-row1">
+            <span class="order-id">주문 #${o.orderId}</span>
+            <span class="chip ${cancelled ? 'chip-cancelled' : 'chip-paid'}">
+              ${cancelled ? 'CANCELLED' : 'PAID'}
+            </span>
+          </div>
+          <div class="order-name">${o.orderName ?? ''}</div>
+          <div class="order-amount">${o.totalAmount.toLocaleString()}원</div>
+          <div class="order-portone">${o.portonePaymentId}</div>
+          ${!cancelled ? `
+          <div class="cancel-area">
+            <input class="cancel-reason" id="r-${o.paymentDbId}"
+                   placeholder="취소 사유" value="단순 변심" />
+            <button class="btn-cancel" data-pid="${o.paymentDbId}">결제취소</button>
+          </div>` : ''}
+        </div>`;
+    }).join('');
+
+    list.onclick = e => {
+      const btn = e.target.closest('.btn-cancel');
+      if (!btn) return;
+      const pid    = Number(btn.dataset.pid);
+      const reason = document.getElementById(`r-${pid}`)?.value || '단순 변심';
+      cancelPayment(pid, reason, btn);
+    };
+  }
+
+  // ────────────────────────────────────────────────────────
+  //  토스트
+  // ────────────────────────────────────────────────────────
+  let _tid;
+  function toast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className   = `toast ${type} show`;
+    clearTimeout(_tid);
+    _tid = setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  // ────────────────────────────────────────────────────────
+  //  시작
+  // ────────────────────────────────────────────────────────
+  init();
+</script>
+</body>
+</html>

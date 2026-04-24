@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: sparta-payment-core
+
+  datasource:
+    url: jdbc:h2:mem:paymentdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always  # data.sql 자동 실행
+
+server:
+  port: 8080
+
+# PortOne V2 시크릿 키 : 본인 키로 교체
+portone:
+  base-url: "https://api.portone.io"
+  api-secret: ${PORTONE_API_SECRET}
+  store-id: ${PORTONE_STORE_ID}
+  channel-key: ${PORTONE_CHANNEL_KEY}

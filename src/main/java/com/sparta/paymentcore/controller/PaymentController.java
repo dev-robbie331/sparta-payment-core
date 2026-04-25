@@ -2,6 +2,7 @@ package com.sparta.paymentcore.controller;
 
 import com.sparta.paymentcore.dto.CancelPaymentRequest;
 import com.sparta.paymentcore.dto.ConfirmPaymentRequest;
+import com.sparta.paymentcore.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +12,12 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PaymentController {
 
+    private final PaymentService paymentService;
+
     @PostMapping("/confirm")
     public ResponseEntity<?> confirm(@RequestBody ConfirmPaymentRequest request) {
-        return null;
+        paymentService.confirm(request);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/cancel")

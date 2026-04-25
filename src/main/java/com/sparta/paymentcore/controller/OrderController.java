@@ -2,6 +2,7 @@ package com.sparta.paymentcore.controller;
 
 import com.sparta.paymentcore.dto.CreateOrderRequest;
 import com.sparta.paymentcore.dto.CreateOrderResponse;
+import com.sparta.paymentcore.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +12,11 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class OrderController {
 
+    private final OrderService orderService;
+
     @PostMapping("/checkout")
     public ResponseEntity<CreateOrderResponse> checkout(@RequestBody CreateOrderRequest request) {
-        return null;
+        return ResponseEntity.ok(orderService.createOrder(1L, request));
     }
 
 }
